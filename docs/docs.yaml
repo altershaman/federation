@@ -1,0 +1,15 @@
+docs:
+
+  seaf.ba.root_domain:
+    location: SEAF/Бизнес-архитектура/Декларация корневого домена
+    description: >
+      how-to: Первичная декларация корневого домена
+    type: markdown
+    source: root_domain.md
+
+  seaf.ba.facades_aliases:
+    location: SEAF/Бизнес-архитектура/Фасады и кросс-доменные справочники
+    description: >
+      Реализация федеративного подхода к описания БА
+    type: markdown
+    source: facades_aliases.md

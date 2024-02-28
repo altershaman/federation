@@ -1,0 +1,135 @@
+entities:
+
+  seaf.self:
+    title: Корневые домены
+    description: >
+      Перечень идентификаторов Участников, чьи архитектуры рассматриваются
+
+    schema:
+      type: array
+      items:
+        $ref: "#/$rels/seaf.ba.parties.party"
+
+    presentations:
+
+      no_archs:
+        type: markdown
+        template: templates/no_archs.md
+
+      is_hexed:
+        type: markdown
+        template: templates/is_hexed.md
+        source: >
+          (
+            {"hexed": $.imports[$contains($, "hexagon/dochub.yaml")].$count($) > 0};
+          )
+
+    menu: >
+      (
+          $arch_parties_id:= $."seaf.self";
+
+          $count($arch_parties_id)=0
+            ? {
+                "location": "Архитектура/Бизнес-архитектура/архитектура не определена",
+                "link": "/entities/seaf.self/no_archs"
+              }
+
+            : $map($arch_parties_id, function($v) {
+                {
+                  "location": "Архитектура/Бизнес-архитектура/" & $lookup($."seaf.ba.parties", $v).title,
+                  "link": "/entities/seaf.ba.parties/party_summary?domain=" & $v
+                }
+              });
+      )
+
+  seaf.facades:
+    title: Фасады
+    description: >
+      Перечень объектов архитектуры, передаваемых в общее пространство
+      
+    schema:
+      type: array
+      items:
+        anyOf:
+          - $ref: "#/$rels/seaf.ba.parties.party"
+          - $ref: "#/$rels/seaf.ba.products.product"
+
+    objects:
+      facade:
+        route: "/"
+        title:  Фасад
+        symbol: "facade"
+
+    presentations:
+
+      eco_observable:
+        type: markdown
+        template: templates/eco_observable.md
+        source: >
+          (
+            $whole_facades:= $."seaf.facades";
+
+
+            $parties:=  $map($whole_facades, function($v) {( 
+                          $body:= $lookup($."seaf.ba.parties", $v);
+                          $body 
+                          ?  {
+                              "id": $v,
+                              "body": $body
+                             }
+                        )});
+
+            $parties:= $append($parties, $spread($."seaf.ba.parties")[$.*.facade].{"id": $keys($), "body": $.*});
+
+            $parties:= $map($parties, function($v) {(
+                          $alias:= $v.body.alias;
+                          $count($map($alias, function($vv){(
+                                  $vv in $parties.id ? 1;
+                                )})) = 0 ? $v
+                        )});
+
+
+            $products:=  $map($whole_facades, function($v) {( 
+                          $body:= $lookup($."seaf.ba.products", $v);
+                          $body 
+                          ?  {
+                              "id": $v,
+                              "body": $body
+                             }
+                        )});
+
+            $products:= $append($products, $spread($."seaf.ba.products")[$.*.facade].{"id": $keys($), "body": $.*});
+
+            $products:= $map($products, function($v) {(
+                          $alias:= $v.body.alias;
+                          $count($map($alias, function($vv){(
+                                  $vv in $parties.id ? 1;
+                                )})) = 0 ? $v
+                        )});
+
+
+            {
+              "parties": $parties,
+              "products": $products
+            }
+          )
+
+      no_facades:
+        type: markdown
+        template: templates/no_facades.md
+
+    menu: >
+      (
+        $count($append($.*.$spread()[$.*.facade = true], [$."seaf.facades"])) > 0 
+          /*есть фасады*/ ? {
+                              "location": "Архитектура/Бизнес-архитектура/Видимая экосистема",
+                              "link": "/entities/seaf.facades/eco_observable"
+                            }
+          /*нет фасадов*/ : {
+                              "location": "Архитектура/Бизнес-архитектура/фасады не опредены",
+                              "link": "/entities/seaf.facades/no_facades"
+          
+                            }
+      )
+
+

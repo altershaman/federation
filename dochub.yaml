@@ -1,0 +1,31 @@
+# Метаданные пакета
+# $package:
+#   federation: # Идентификатор пакета
+#     # Краткое название пакета
+#     name: federation
+#     # Поставщик
+#     vendor: Sber & @altershaman
+#     # Описание
+#     description: Расширение для SEAF для федеративного управления доменами архитектуры
+#     # Версия
+#     version: 0.1.0
+#     # Зависимости от других пакетов
+#     dependencies:
+#       dochub: ">=3.8.0"
+#       seaf-core: ">=1.2.0"
+
+imports:
+  - entities/root.yaml
+  - docs/docs.yaml
+
+#todo Написать ридми
+
+#todo facades_aliases.md
+#todo может ли быть что-то кроме parties and products в фасадах?
+#todo справочник категорий Участников в отдельную репу
+#todo как определять справочное значение из нескольких синонимов?
+#todo в экоситеме решить показывать ли врапперы без сегментов или только сегментированные продукты?
+#todo bi-directional aliases composition
+#todo алиасы титульных объектов
+#todo check aliases is facades
+

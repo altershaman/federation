@@ -1,0 +1,1 @@
+Hexagon status: {{#hexed}}on{{/hexed}}{{^hexed}}off{{/hexed}}
