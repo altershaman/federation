@@ -1,0 +1,16 @@
+  seaf.ba.parties:
+    schema:
+      patternProperties:
+        "[a-zA-Z0-9_]*(\\.[a-zA-Z0-9_]*)*$":
+          properties:
+            facade:
+              title: Фасад
+              description: Является фасадом, если true
+              type: boolean
+            alias: 
+              title: Является синонимом
+              description: >
+                Перечень Участников из других доменов, синонимом которых является данный Участник
+              type: array
+              items:
+                $ref: "#/$rels/seaf.ba.parties.party"
