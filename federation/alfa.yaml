@@ -1,0 +1,95 @@
+seaf.ba.parties:
+
+  alfa:
+    title: Alfa
+
+  alfa.sales:
+    title: Sales Alfa
+
+  alfa.procurements:
+    title: Procurements Alfa
+
+  alfa.hr:
+    title: HR Alfa
+
+  alfa.hr.hire:
+    title: Alfa Hire
+
+  alfa.hr.growth:
+    title: Alfa Human Capital Growth 
+
+  alfa.teams:
+    title: Alfa Teams
+
+  alfa.teams.infra:
+    title: Infra Teams
+
+  alfa.teams.infra.recovery:
+    title: Recovery Team
+
+  alfa.teams.infra.continuity:
+    title: Continuity Team
+
+  alfa.teams.ux:
+    title: UX Team
+
+  alfa.teams.services:
+    title: Services Teams
+
+  alfa.teams.infra.cloud:
+    has_interest:
+      - id:
+  
+  alfa.teams.services.cloud:
+    title: Cloud Team
+    exposed:
+      alfa.teams.infra.cloud:
+        title: Cloud Internal
+
+  alfa.teams.services.hosting:
+    title: Hosting Team
+
+  alfa.customers.fl:
+    title: Individual Customers
+
+  alfa.customers.ul:
+    title: Legal Entities Customers
+
+  alfa.city_energy:
+    title: City Energy
+
+
+seaf.ba.products:
+
+  alfa.core:
+    owner:
+    title: Core Alfa
+
+  alfa.enablers:
+    title: Enablers Alfa
+
+  alfa.enablers.identity:
+    title: User Identity
+
+  alfa.enablers.care:
+    title: User Care
+
+  alfa.core.hosting:
+    title: Alfa Hosting
+
+  alfa.core.vps:
+    title: Alfa VPS
+
+  alfa.teams.ux.lk:
+    title: Alfa LK
+
+  alfa.teams.ux.cp:
+    title: Control Panel
+
+  
+seaf.self:
+  - alfa.core
+  - alfa.teams
+  - alfa.hr
+  - alfa.enablers
+  - alfa.teams.infra

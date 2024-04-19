@@ -17,6 +17,9 @@
 imports:
   - entities/root.yaml
   - docs/docs.yaml
+  - federation/federated_example.yaml
+  - federation/alfa.yaml
+  - ba.yaml
 
 #todo Написать ридми
 

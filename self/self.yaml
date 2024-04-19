@@ -1,0 +1,390 @@
+entities:
+
+  seaf.self:
+    title: Дополнительные контексты (точки зрения)
+    description: >
+      Перечень некорневых идентификаторов объектов архитектуры,
+      изолирующих свое внутреннее содержимое от более широкого контекста
+
+    schema:
+      type: array
+      items:
+        anyOf:
+          - $ref: "#/$rels/seaf.ba.parties.party" 
+          - $ref: "#/$rels/seaf.ba.products.product"
+          - $ref: "#/$rels/seaf.ba.processes.process" 
+
+    presentations:
+#todo Перепроверить терминологию в документации
+      no_ctx:
+        type: markdown
+        template: templates/no_ctx.md
+
+      domain_map:
+        type: markdown
+        template: templates/domain_map.md
+
+      objects_domain_structure:
+        type: smartants
+        source: >
+          (
+            $getSymbol:= function($title, $entity_id, $symbol_width) {(
+                $symbol_title:= $split($entity_id, ".")[-1];
+                $symbol_obj:= $eval("$.\"seaf.icons\"." & $symbol_title);
+                $symbol_gliph:= $symbol_obj.gliph;
+                $symbol_template:= $symbol_gliph ?
+                  $match($symbol_gliph, /^(<svg)[^>]+>/, 1).match &
+                  '<rect x="0" y="-960" width={{vbWidth}} height="960" rx="300" fill="' & $symbol_obj.back_color & '"/>' &
+                  '<text style="font-size:800px;" x="1200" y="-250" fill="' & $symbol_obj.fore_color & '" font-family="monospace">{{title}}</text>' &
+                  $match($symbol_gliph, /(<path)[^>]+>/, 1).match &
+                  '</svg>'
+
+                ;
+                $symbol_template:= $symbol_template
+                    ? $symbol_template
+                    : $."seaf.icons".no_icon;
+                $symbol_svg:= $replace($symbol_template, /\{\{title\}\}/, $title);
+                $symbol_svg:= $replace($symbol_svg, /\{\{fore_color\}\}/, $symbol_obj.fore_color);
+                $symbol_svg:= $replace($symbol_svg, /\{\{back_color\}\}/, $symbol_obj.back_color);
+                $symbol_svg:= $replace($symbol_svg, /\{\{absWidth\}\}/, $string($symbol_width));
+                $symbol_svg:= $replace($symbol_svg, /\{\{vbWidth\}\}/, $string(4000*$symbol_width/100));
+                {"title": $symbol_title & "_" & $title, "svg": $symbol_svg}
+            )};
+
+            $pre_nodes:= $arch_objects($$).$map($, function($v) {(
+                $title:= $split($.object_id, ".")[-1];
+                $size:= $length($title);
+                $symbol_width:= 25 + ($size > 7 ? $size*14 : $size*16 );
+                $symbol:= $getSymbol($title, $.entity_id, $symbol_width);
+                {"nodes": {
+                    $.object_id: {
+                        "title": $title, 
+                        "symbol": $symbol.title}
+                    },
+                "symbols": {
+                    $symbol.title: $symbol.svg}
+                };
+            )});
+
+            {"config": {
+              "distance": 10,
+              "trackWidth": 24,
+              /*"hideBoundaryTitles": true,*/
+              "hideLeafTitles": true
+              },
+             "symbols": $merge($pre_nodes.symbols), 
+             "nodes": $merge($pre_nodes.nodes)
+            } 
+
+
+          )
+
+      ctx_summary:
+        type: markdown
+        template: templates/ctx_summary.md
+        source: >
+          (
+            $domain:= $params.domain;
+            $title:= $params.title;
+            $entity_id:= $params.entity_id;
+            $entity_title:= $params.entity_title;
+            
+            $ctx:= $context_content_refined($domain, $$);
+            
+            $membersCtx:= $ctx.observable.membersCtx;
+            $membersOrd:= $ctx.observable.membersOrd;
+
+            /*move current context object from Ctx to Ord*/
+            $membersOrd:= $append($membersCtx[$.id= $domain], $membersOrd);
+            $membersCtx:= $membersCtx[$.id != $domain];
+
+            /*facades exposed decoration for template interpolation*/
+            $membersOrd:= $map($membersOrd, function($v) {(
+            $count($v.body.exposed.$keys())>0 
+              ? $v~>|$.body|{ "exposed": [ $map ($.exposed.$spread($), function($vv){
+                                                { "augments": $vv.$keys(),
+                                                  "augmented": $vv.*
+                                                }
+                                           })
+                                          ]
+                            }|
+              : $v
+            )});
+
+            $data:= $encodeUrl( $string(  { "domain": $domain,
+                                            "title": $title,
+                                            "entity_id": $entity_id,
+                                            "entity_title": $entity_title,
+
+                                            "wrapper": $ctx.wrapper,
+                                            "isContext": $ctx.isContext,
+                                            "membersCtx": $membersCtx,
+                                            "membersOrd": $membersOrd
+                                          }
+                                        )
+                              );
+            {
+              "domain": $domain,
+              "wrapper": $ctx.wrapper,
+              "data": $data
+            };
+
+          )
+
+      ctx_grid:
+        type: mkr-grid
+        source: >
+          (
+            $data:= $params.data;         
+            {
+                "type": "rows",
+                "items": [
+                  {
+                    "type": "columns",
+                    "items": [
+                      {"title": "Что входит в контекст",
+                       "icon": "fullscreen",
+                        "style": {
+                            "border": true,
+                            "padding": "12px",
+                            "margin": "4px"
+                        },
+                        "src": "@entity/seaf.self/ctx_members?data=" & $data
+                      },
+                      {"title": "Граф",
+                       "width": "80%",
+                       "icon": "hub",
+                        "style": {
+                            "border": true,
+                            "padding": "12px",
+                            "margin": "4px"
+                        },
+                        "src": "@entity/seaf.self/ctx_graph?data=" & $data
+                      }
+
+                    ]
+                  } /*,
+                    {
+                        "type": "columns",
+                        "items": [
+                            {
+                                "type": "rows",
+                                "width": "40%",
+                                "items": [
+                                    {
+                                        "title": "Сводка по компоненту",
+                                        "icon": "settings",
+                                        "style": {
+                                            "margin": "4px",
+                                            "border": true
+                                        },
+                                        "src": "@entity/components/summary?component=flix.1c"
+                                    },
+                                    {
+                                        "title": "Документы",
+                                        "icon": "description",
+                                        "style": {
+                                            "border": true,
+                                            "padding": "12px",
+                                            "margin": "4px"
+                                        },
+                                        "src": "@entity/components/docs?component=flix.1c"
+                                    },
+                                    {
+                                        "title": "Иерархия компонента",
+                                        "icon": "description",
+                                        "style": {
+                                            "border": true,
+                                            "margin": "4px"
+                                        },
+                                        "src": "@entity/components/hierarchy?component=flix.1c"
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "rows",
+                                "width": "60%",
+                                "height": "50%",
+                                "items": [
+                                    {
+                                        "title": "Контексты",
+                                        "icon": "description",
+                                        "style": {
+                                            "border": true,
+                                            "max-height": "700px",
+                                            "margin": "4px"
+                                        },
+                                        "src": "@entity/seaf.ba.parties/ctx_summary?domain=flix"
+                                    }
+                                ]
+                            }
+                        ]
+                    }*/
+                ]
+            }         
+          )
+
+      ctx_members:
+        type: markdown
+        template: templates/ctx_members.md
+        source: >
+          (
+            $eval($decodeUrl($params.data))
+          )
+      ctx_graph:
+        title: Бизнес-контекст (граф)
+        type: smartants
+        source: >
+          (
+            $data:= $eval($decodeUrl($params.data));
+
+            $getSymbol:= function($title, $entity_id, $symbol_width) {(
+                $symbol_title:= $split($entity_id, ".")[-1];
+                $symbol_obj:= $eval("$.\"seaf.icons\"." & $symbol_title);
+                $symbol_gliph:= $symbol_obj.gliph;
+                $symbol_template:= $symbol_gliph ?
+                  $match($symbol_gliph, /^(<svg)[^>]+>/, 1).match &
+                  '<rect x="0" y="-960" width={{vbWidth}} height="960" rx="300" fill="' & $symbol_obj.back_color & '"/>' &
+                  '<text style="font-size:800px;" x="1200" y="-250" fill="' & $symbol_obj.fore_color & '" font-family="monospace">{{title}}</text>' &
+                  $match($symbol_gliph, /(<path)[^>]+>/, 1).match &
+                  '</svg>'
+
+                ;
+                $symbol_template:= $symbol_template
+                    ? $symbol_template
+                    : $."seaf.icons".no_icon;
+                $symbol_svg:= $replace($symbol_template, /\{\{title\}\}/, $title);
+                $symbol_svg:= $replace($symbol_svg, /\{\{fore_color\}\}/, $symbol_obj.fore_color);
+                $symbol_svg:= $replace($symbol_svg, /\{\{back_color\}\}/, $symbol_obj.back_color);
+                $symbol_svg:= $replace($symbol_svg, /\{\{absWidth\}\}/, $string($symbol_width));
+                $symbol_svg:= $replace($symbol_svg, /\{\{vbWidth\}\}/, $string(4000*$symbol_width/100));
+                {"title": $symbol_title & "_" & $title, "svg": $symbol_svg}
+            )};
+
+            $objects:= $append($data.membersOrd, $data.membersCtx);
+            $pre_nodes:= $objects.$map($, function($v) {(
+                $title:= $v.body.title;
+                $size:= $length($title);
+                $symbol_width:= 25 + ($size > 7 ? $size*14 : $size*16 );
+                $symbol:= $getSymbol($title, $v.body.entity_id, $symbol_width);
+                { "nodes": {
+                      $v.id: 
+                          $merge([$v.body, 
+                                  {"symbol": $symbol.title}
+                                ])
+                    },
+                "symbols": {
+                    $symbol.title: $symbol.svg}
+                };
+            )});
+
+            $exposed:= $objects[$count($.body.exposed.augments) >0].{$.body.exposed.augments: {"entity_id": $.body.entity_id, "origin": $.id}};
+            $pre_exposed:= $exposed.$map($, function($v) {(
+                $title:= $v.$keys();
+                $size:= $length($title);
+                $symbol_width:= 25 + ($size > 7 ? $size*14 : $size*16 );
+                $symbol:= $getSymbol($title, $v.*.entity_id, $symbol_width);
+                { "nodes": {
+                      $title: 
+                          
+                          {"symbol": $symbol.title}
+                        
+                    },
+                "symbols": {
+                    $symbol.title: $symbol.svg},
+                "links": [
+                  { "from": $v.*.origin,
+                    "to": $title,
+                    "title": "exposed",
+                    "style": "->"
+                  
+                  }
+                
+                ]
+                };
+            )});
+
+
+            $impressed:= $objects[$count($.body.impressed) >0].{$.body.impressed: {"entity_id": $.body.entity_id, "augmented": $.id}};
+            $pre_impressed:= $impressed.$map($, function($v) {(
+                $title:= $v.$keys();
+                $size:= $length($title);
+                $symbol_width:= 25 + ($size > 7 ? $size*14 : $size*16 );
+                $symbol:= $getSymbol($title, $v.*.entity_id, $symbol_width);
+                { "nodes": {
+                      $title: 
+                          
+                          {"symbol": $symbol.title}
+                        
+                    },
+                "symbols": {
+                    $symbol.title: $symbol.svg},
+                "links": [
+                  { "to": $v.*.augmented,
+                    "from": $title,
+                    "title": "augmented",
+                    "style": "->"
+                  
+                  }
+                
+                ]
+                };
+            )});
+
+            
+
+            {"config": {
+              "distance": 25,
+              "trackWidth": 24,
+              /*"hideBoundaryTitles": true,*/
+              "hideLeafTitles": true
+              },
+             "symbols": $merge($append($pre_nodes.symbols, $append($pre_exposed.symbols, $pre_impressed.symbols))), 
+             "nodes": $merge($append($pre_nodes.nodes, $append($pre_exposed.nodes, $pre_impressed.nodes))),
+             "links": $append($pre_exposed.links, $pre_impressed.links)
+            } 
+
+
+          )
+
+
+      object_card:
+        type: markdown
+        template: templates/object_card.md
+        source: >
+          (
+            $id:= $params.id;
+          )
+    menu: >
+      (
+          /*Get contexts both auto (top parties domains) and manual (declared in seaf_self)*/
+          $contexts:= $seaf_contexts($$);
+
+          /*Create menu items*/
+          $contexts:= $count($contexts) > 0
+            ? $map($contexts, function($v) {(
+                $menu_path_cleared:= $replace($v.menu_path, /^\/+/, "");
+                {
+                  "location": "Архитектура/Бизнес-архитектура/" & $menu_path_cleared,
+                  "link": "/entities/seaf.self/ctx_summary?domain=" & $v.context 
+                                                                    /*
+                                                                    & "&title=" & $split($menu_path_cleared, "/")[-1]
+                                                                    & "&entity_id=" & $v.entity_id
+                                                                    & "&entity_title=" & $v.entity_title
+                                                                    */
+                }
+              )})
+            : {
+                "location": "Архитектура/Бизнес-архитектура/контексты не определены",
+                "link": "/entities/seaf.self/no_ctx"
+              };
+          $domains_structure:= {
+                "location": "Архитектура/Бизнес-архитектура/Доменная структура",
+                "link": "/entities/seaf.self/domain_map",
+                "order": 100
+            };
+
+
+          $menu:= $append($domains_structure, $contexts);
+      )
+

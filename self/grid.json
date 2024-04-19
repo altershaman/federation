@@ -1,0 +1,60 @@
+{
+    "type": "rows",
+    "items": [
+        {
+            "type": "columns",
+            "items": [
+                {
+                    "type": "rows",
+                    "width": "40%",
+                    "items": [
+                        {
+                            "title": "Сводка по компоненту",
+                            "icon": "settings",
+                            "style": {
+                                "margin": "4px",
+                                "border": true
+                            },
+                            "src": "@entity/components/summary?component=flix.1c"
+                        },
+                        {
+                            "title": "Документы",
+                            "icon": "description",
+                            "style": {
+                                "border": true,
+                                "padding": "12px",
+                                "margin": "4px"
+                            },
+                            "src": "@entity/components/docs?component=flix.1c"
+                        },
+                        {
+                            "title": "Иерархия компонента",
+                            "icon": "description",
+                            "style": {
+                                "border": true,
+                                "margin": "4px"
+                            },
+                            "src": "@entity/components/hierarchy?component=flix.1c"
+                        }
+                    ]
+                },
+                {
+                    "type": "rows",
+                    "width": "60%",
+                    "items": [
+                        {
+                            "title": "Контексты",
+                            "icon": "description",
+                            "style": {
+                                "border": true,
+                                "min-height": "300px",
+                                "margin": "4px"
+                            },
+                            "src": "@entity/components/contexts?component=flix.1c"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}
